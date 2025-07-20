@@ -1,0 +1,134 @@
+
+File Name: 2. Microservices with API gateway - Creating Microservices for Account and Loan
+
+===============================
+📁 Project Structure
+===============================
+microservices-project/
+├── account-service/
+│   └── src/...
+├── loan-service/
+│   └── src/...
+├── api-gateway/
+│   └── src/...
+└── pom.xml (parent)
+
+===============================
+✅ 1. Maven Parent pom.xml
+===============================
+<project xmlns="http://maven.apache.org/POM/4.0.0" ...>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.example</groupId>
+  <artifactId>microservices-project</artifactId>
+  <version>1.0</version>
+  <packaging>pom</packaging>
+
+  <modules>
+    <module>account-service</module>
+    <module>loan-service</module>
+    <module>api-gateway</module>
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>2023.0.0</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <properties>
+    <java.version>17</java.version>
+    <spring-cloud.version>2023.0.0</spring-cloud.version>
+  </properties>
+</project>
+
+===============================
+✅ 2. account-service
+===============================
+AccountController.java:
+-------------------------
+@RestController
+@RequestMapping("/account")
+public class AccountController {
+    @GetMapping("/info")
+    public ResponseEntity<String> getAccountInfo() {
+        return ResponseEntity.ok("Account Service: Account Info fetched!");
+    }
+}
+
+application.yml:
+-------------------------
+server:
+  port: 8081
+
+spring:
+  application:
+    name: account-service
+
+===============================
+✅ 3. loan-service
+===============================
+LoanController.java:
+-------------------------
+@RestController
+@RequestMapping("/loan")
+public class LoanController {
+    @GetMapping("/info")
+    public ResponseEntity<String> getLoanInfo() {
+        return ResponseEntity.ok("Loan Service: Loan Info fetched!");
+    }
+}
+
+application.yml:
+-------------------------
+server:
+  port: 8082
+
+spring:
+  application:
+    name: loan-service
+
+===============================
+✅ 4. api-gateway
+===============================
+application.yml:
+-------------------------
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      routes:
+        - id: account-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/account/**
+        - id: loan-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/loan/**
+
+ApiGatewayApplication.java:
+-------------------------
+@SpringBootApplication
+@EnableDiscoveryClient
+public class ApiGatewayApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(ApiGatewayApplication.class, args);
+    }
+}
+
+===============================
+🧪 Testing Endpoints
+===============================
+- http://localhost:8080/account/info → routes to account-service
+- http://localhost:8080/loan/info → routes to loan-service
